@@ -50,28 +50,3 @@ class Heap(object):
                 else:
                     break
         return top
-
-
-class Schedule(object):
-    """
-    Command schedule
-    """
-
-    def __init__(self):
-        self.queue = Heap()
-
-    def schedule_command(self, command, time=time.time()):
-        self.queue.insert(time, command)
-        # TODO Dispatch to children
-
-    def serialize_queue(self):
-
-        return pickle.dumps(self.queue)
-
-    def get_commands(self, time=time.time()):
-        commands = []
-        while self.queue.peek()[0] <= time:
-            commands.append(self.queue.pop[1])
-        return commands
-
-
