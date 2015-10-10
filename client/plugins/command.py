@@ -27,11 +27,12 @@ class Command(object):
 class SayCommand(Command):
     def __init__(self, text):
         super().__init__()
-        self.text = text
+        self.text = shlex.quote(text.decode('utf-8','ignore'))
 
     def act(self):
         if platform.system() == 'Darwin':
-            os.system("say -v 'Bad News' " + shlex.quote(self.text))
+            os.system("say -v 'Bad News' " + self.text)
+        elif platform.system() == 'Linux':
+            subprocess.call(["echo", self.text])
         else:
-            raise NotImplementedError("No tts implemented for %s" % platform.system())
-
+            os.system("echo " + self.text)
