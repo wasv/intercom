@@ -27,7 +27,7 @@ class Command(object):
 class SayCommand(Command):
     def __init__(self, text):
         super().__init__()
-        self.text = shlex.quote(text.decode('utf-8','ignore'))
+        self.text = shlex.quote(text)
 
     def act(self):
         if platform.system() == 'Darwin':
