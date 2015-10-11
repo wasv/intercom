@@ -17,6 +17,7 @@ class IntercomProtocol(LineReceiver):
                 cmd.act()
 
     def __init__(self):
+        print("Connected successfully")
         c = task.LoopingCall(self.check)
         c.start(1.0)
 
@@ -39,7 +40,7 @@ class IntercomProtocol(LineReceiver):
 
 class IntercomClientFactory(protocol.ClientFactory):
     protocol = IntercomProtocol
-    
+
     def clientConnectionFailed(self, connector, reason):
         print('connection failed:', reason.getErrorMessage())
         time.sleep(5)
