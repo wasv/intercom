@@ -57,7 +57,7 @@ try:
 except FileNotFoundError:
         server = 'localhost'
 
-connector = reactor.connectTCP(server, 42421, IntercomClientFactory())
+connector = reactor.connectTCP(server, 42124, IntercomClientFactory())
 print('connecting to:',server)
 reactor.run()
 

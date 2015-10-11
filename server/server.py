@@ -94,7 +94,7 @@ class EchoFactory(protocol.Factory):
         if self.istream: self.istream.close()
 
 def main():
-    host = socket.gethostbyname("localhost")
+    host = ""
     port = 42420
     s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -102,7 +102,7 @@ def main():
     s.listen(4)
     f=EchoFactory(s)
     f.clients=[]
-    reactor.listenTCP(42421,f)
+    reactor.listenTCP(42124,f)
     reactor.run()
 
 if __name__ == '__main__':
