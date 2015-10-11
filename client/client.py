@@ -7,21 +7,18 @@ from twisted.protocols.basic import LineReceiver
 __author__ = 'wstevens'
 
 class IntercomProtocol(LineReceiver):
-    heap = Heap()
 
     def check(self):
-        if not self.heap.empty():
-            run_time, cmd = self.heap.peek()
+        if not self.factory.heap.empty():
+            run_time, cmd = self.factory.heap.peek()
             if run_time <= time.time():
-                self.heap.pop()
+                self.factory.heap.pop()
                 cmd.act()
 
-    def __init__(self):
+    def connectionMade(self):
         print("Connected successfully")
         c = task.LoopingCall(self.check)
-        c.start(1.0)
-
-    def connectionMade(self):
+        c.start(5.0)
         h = task.LoopingCall(self.heartbeat)
         h.start(5.0)
 
@@ -32,7 +29,7 @@ class IntercomProtocol(LineReceiver):
                 parts[1]=' '.join(parts[1:])
                 print(parts[0],"New Message Recieved: ",parts[1])
                 sc = plugins.command.SayCommand(parts[1])
-                self.heap.push(float(parts[0]), sc)
+                self.factory.heap.push(float(parts[0]), sc)
     
     def heartbeat(self):
         self.sendLine("<3<3".encode('utf-8'))
@@ -40,6 +37,7 @@ class IntercomProtocol(LineReceiver):
 
 class IntercomClientFactory(protocol.ClientFactory):
     protocol = IntercomProtocol
+    heap = Heap()
 
     def clientConnectionFailed(self, connector, reason):
         print('connection failed:', reason.getErrorMessage())
@@ -51,6 +49,11 @@ class IntercomClientFactory(protocol.ClientFactory):
         print('connection lost:', reason.getErrorMessage())
         connector.disconnect()
         connector.connect()
+
+    def buildProtocol(self, addr):
+        p = self.protocol()
+        p.factory = self
+        return p
 
 try:
     with open('server.txt') as f:
