@@ -11,7 +11,6 @@ import time
 class Command(object):
     def __init__(self):
         self.uid = uuid.uuid4()
-        print(self.uid)
         pass
 
     def act(self):

@@ -25,10 +25,13 @@ class IntercomProtocol(LineReceiver):
         h.start(5.0)
 
     def lineReceived(self, line):
-        parts = line.decode('utf-8','ignore').split("|")
-        print(parts[0],"New Message Recieved: ",parts[1])
-        sc = plugins.command.SayCommand(parts[1])
-        self.heap.push(float(parts[0]), sc)
+        if line:
+            parts = line.decode('utf-8','ignore').split("|")
+            if len(parts) >= 2:
+                parts[1]=' '.join(parts[1:])
+                print(parts[0],"New Message Recieved: ",parts[1])
+                sc = plugins.command.SayCommand(parts[1])
+                self.heap.push(float(parts[0]), sc)
     
     def heartbeat(self):
         self.sendLine("<3<3".encode('utf-8'))
@@ -54,7 +57,7 @@ try:
 except FileNotFoundError:
         server = 'localhost'
 
-connector = reactor.connectTCP(server, 8000, IntercomClientFactory())
+connector = reactor.connectTCP(server, 42421, IntercomClientFactory())
 print('connecting to:',server)
 reactor.run()
 
