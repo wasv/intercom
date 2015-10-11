@@ -27,7 +27,7 @@ class Echo(LineReceiver):
     def __init__(self, isock):
         self.isock = isock
         reactor.callLater(1.0, self.readFromIn)
-        reactor.callLater(15.0, self.heartbeat)
+#        reactor.callLater(15.0, self.heartbeat)
 
     def lineReceived(self, line):
         """
