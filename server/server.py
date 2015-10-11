@@ -17,12 +17,13 @@ class Echo(LineReceiver):
             self.transport.loseConnection()
             print("Lost client")
             self.factory.clients.remove(self)
-        self.alive = False
+        else:
+          self.alive = False
+          reactor.callLater(15.0, self.heartbeat)
 
     def __init__(self):
         reactor.callLater(1.0, self.readFromIn)
-        h = task.LoopingCall(self.heartbeat)
-        h.start(15.0)
+        reactor.callLater(15.0, self.heartbeat)
 
     def lineReceived(self, line):
         """
