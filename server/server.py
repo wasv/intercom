@@ -15,19 +15,9 @@ class Echo(LineReceiver):
     alive = True
     inputs = []
 
-    def heartbeat(self):
-        if not self.alive:
-            self.transport.loseConnection()
-            print("Lost client")
-            self.factory.clients.remove(self)
-        else:
-          self.alive = False
-          reactor.callLater(15.0, self.heartbeat)
-
     def __init__(self, isock):
         self.isock = isock
         reactor.callLater(1.0, self.readFromIn)
-#        reactor.callLater(15.0, self.heartbeat)
 
     def lineReceived(self, line):
         """
@@ -37,14 +27,6 @@ class Echo(LineReceiver):
         if line is "<3<3":
             self.alive = True
 
-    def connectionMade(self):
-        print("Got Client")
-        self.factory.clients.append(self)
-
-    def connectLost(self, reason):
-        print("Lost client")
-        self.factory.clients.remove(self)
-
     def readFromIn(self):
         for ins in select.select([self.isock, sys.stdin] + self.inputs, [], [], 1)[0]:
             line = self.readline(ins)
@@ -53,8 +35,9 @@ class Echo(LineReceiver):
                 parts[0] =str(time.time()+float(parts[0]))
                 line = '|'.join(parts)
                 print(line)
-                for c in self.factory.clients:
-                    print(c)
+                for h in self.factory.clients:
+                    print("Sent message to",h)
+                    c = self.factory.clients[h]
                     c.message(line.encode('utf-8'))
         reactor.callLater(1.0, self.readFromIn)
 
@@ -80,14 +63,20 @@ class Echo(LineReceiver):
 
 class EchoFactory(protocol.Factory):
     protocol = Echo
-    clients = []
+    clients = {}
 
     def __init__(self, istream):
         self.istream = istream
 
     def buildProtocol(self, addr):
-        p = self.protocol(self.istream)
-        p.factory = self
+        addr = addr.host 
+        if addr not in self.clients:
+          print("New client",addr)
+          self.clients[addr] = self.protocol(self.istream)
+          self.clients[addr].factory = self
+        else:
+          print("Reconnection from",addr)
+        p = self.clients[addr]
         return p
 
     def stopFactory(self):
@@ -101,7 +90,6 @@ def main():
     s.bind((host,port))
     s.listen(4)
     f=EchoFactory(s)
-    f.clients=[]
     reactor.listenTCP(42124,f)
     reactor.run()
 
