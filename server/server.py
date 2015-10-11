@@ -10,16 +10,27 @@ from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor, protocol, endpoints, task
 ### Protocol Implementation
 
-# This is just about the simplest possible protocol
 class Echo(LineReceiver):
+    alive = True
+    def heartbeat(self):
+        if not self.alive:
+            self.transport.loseConnection()
+            print("Lost client")
+            self.factory.clients.remove(self)
+        self.alive = False
+
     def __init__(self):
         reactor.callLater(1.0, self.readFromIn)
+        h = task.LoopingCall(self.heartbeat)
+        h.start(15.0)
 
     def lineReceived(self, line):
         """
         As soon as any data is received, write it back.
         """
-        print(line.decode('utf-8','ignore'))
+        line = line.decode('utf-8','ignore')
+        if line is "<3<3":
+            self.alive = True
 
     def connectionMade(self):
         print("Got Client")
@@ -27,7 +38,7 @@ class Echo(LineReceiver):
 
     def connectLost(self, reason):
         print("Lost client")
-        self.factory.cleints.remove(self)
+        self.factory.clients.remove(self)
 
     def readFromIn(self):
         if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:

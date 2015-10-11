@@ -33,6 +33,7 @@ class SayCommand(Command):
         if platform.system() == 'Darwin':
             os.system("say -v 'Bad News' " + self.text)
         elif platform.system() == 'Linux':
+            print(self.text)
             subprocess.call(["espeak", self.text])
         else:
             os.system("echo " + self.text)
