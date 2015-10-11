@@ -12,6 +12,8 @@ from twisted.internet import reactor, protocol, endpoints, task
 
 class Echo(LineReceiver):
     alive = True
+    istream = sys.stdin
+
     def heartbeat(self):
         if not self.alive:
             self.transport.loseConnection()
@@ -42,8 +44,8 @@ class Echo(LineReceiver):
         self.factory.clients.remove(self)
 
     def readFromIn(self):
-        if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-            line = sys.stdin.readline().strip()
+        if self.istream in select.select([self.istream], [], [], 0)[0]:
+            line = self.istream.readline().strip()
             if line:
                 parts = line.split('|')
                 parts[0] =str(time.time()+float(parts[0]))
