@@ -19,21 +19,17 @@ class IntercomProtocol(LineReceiver):
         print("Connected successfully")
         c = task.LoopingCall(self.check)
         c.start(5.0)
-        h = task.LoopingCall(self.heartbeat)
-        h.start(5.0)
 
     def lineReceived(self, line):
         if line:
             parts = line.decode('utf-8','ignore').split("|")
             if len(parts) >= 2:
-                parts[1]=' '.join(parts[1:])
-                print(parts[0],"New Message Recieved: ",parts[1])
-                sc = plugins.command.SayCommand(parts[1])
-                self.factory.heap.push(float(parts[0]), sc)
+                parts[0]=' '.join(parts[:-1])
+                parts[1]=parts[-1]
+                print(parts[1],"New Message Recieved: ",parts[0])
+                sc = plugins.command.SayCommand(parts[0])
+                self.factory.heap.push(float(parts[1]), sc)
     
-    def heartbeat(self):
-        self.sendLine("<3<3".encode('utf-8'))
-
 
 class IntercomClientFactory(protocol.ClientFactory):
     protocol = IntercomProtocol

@@ -5,6 +5,7 @@
 
 import time
 import select
+import os
 import sys
 import socket
 from twisted.protocols.basic import LineReceiver
@@ -29,10 +30,17 @@ class Echo(LineReceiver):
 
     def readFromIn(self):
         for ins in select.select([self.isock, sys.stdin] + self.inputs, [], [], 1)[0]:
-            line = self.readline(ins)
+            try:
+                line = self.readline(ins)
+            except Excpetion as e:
+                print(e)
             if line:
                 parts = line.split('|')
-                parts[0] =str(time.time()+float(parts[0]))
+                parts[0]=parts[0].strip()
+                if len(parts) > 1:
+                    parts[-1] = str(time.time()+float(parts[-1]))
+                else:
+                    parts.append(str(time.time()+5))
                 line = '|'.join(parts)
                 print(line)
                 for h in self.factory.clients:
@@ -42,21 +50,25 @@ class Echo(LineReceiver):
         reactor.callLater(1.0, self.readFromIn)
 
     def readline(self,ins):
-        if ins == self.isock:
-            client, _ = ins.accept()
-            self.inputs.append(client)
-            return None
-        elif ins == sys.stdin:
-            return sys.stdin.readline().strip()
-        else:
-            data = ins.recv(1024)
-            print(data)
-            ins.close()
-            self.inputs.remove(ins)
-            if data:
-                return data.decode('utf-8','ignore')
-            else:
+        if isinstance(ins, socket.socket): # Is it a socket?
+            if ins == self.isock: # Is it the main socket?
+                client, _ = ins.accept()
+                self.inputs.append(client)
                 return None
+            else: # Is it a client?
+                data = ins.recv(255)
+                print(data)
+                ins.close()
+                self.inputs.remove(ins)
+                if data:
+                    return data.decode('utf-8','ignore')
+                else:
+                    return None
+        elif ins == sys.stdin: # Maybe its standard input?
+            return sys.stdin.readline().strip()
+        else: # If not, assume file descriptor
+            data = os.read(ins, 255).decode('utf-8','ignore')
+            return data
 
     def message(self, message):
         self.sendLine(message)
@@ -80,15 +92,17 @@ class EchoFactory(protocol.Factory):
         return p
 
     def stopFactory(self):
-        if self.istream: self.istream.close()
+        if isinstance(self.istream, socket.socket):
+            self.istream.close()
 
 def main():
     host = ""
     port = 42420
-    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((host,port))
-    s.listen(4)
+    s = os.open('input', os.O_RDONLY|os.O_NONBLOCK)
+    #s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    #s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    #s.bind((host,port))
+    #s.listen(4)
     f=EchoFactory(s)
     reactor.listenTCP(42124,f)
     reactor.run()
