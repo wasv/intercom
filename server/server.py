@@ -38,7 +38,11 @@ class Echo(LineReceiver):
                 parts = line.split('|')
                 parts[0]=parts[0].strip()
                 if len(parts) > 1:
-                    parts[-1] = str(time.time()+float(parts[-1]))
+                    try:
+                        parts[-1] = str(time.time()+float(parts[-1]))
+                    # If any of the above fails, then last part is not a float. Use default value.
+                    except ValueError:
+                        parts.append(str(time.time()+5))
                 else:
                     parts.append(str(time.time()+5))
                 line = '|'.join(parts)
