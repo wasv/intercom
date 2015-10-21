@@ -3,38 +3,56 @@
 # Copyright (c) Twisted Matrix Laboratories.
 # See LICENSE for details.
 
+from __future__ import print_function
 import time
 import select
 import os
 import sys
 import socket
+import hashlib
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor, protocol, endpoints, task
+
 ### Protocol Implementation
 
 class Echo(LineReceiver):
     alive = True
     inputs = []
+    # A mapping of public ids to private ids. Should be put into seperate file.
+    authkeys = {'test':'qwerty123'}
+
+    def authenticate(self, data):
+        """
+            Authenticates data using an md5 hash.
+            Expects a string of format publicid % message % md5(message+privateid)
+        """
+
+        data = data.strip().split('%')
+        if len(data) != 3:
+            raise Exception("Invalid Message")
+        try:
+            salt = self.authkeys[data[0]].encode('utf-8','ignore')
+        except:
+            raise Exception("Invalid Authkey")
+        message = data[1].encode('utf-8','ignore')
+        checksum = hashlib.md5(message+salt).hexdigest()
+        if data[2] == checksum:
+            return message.decode('utf-8','ignore')
+        else:
+            raise Exception("Failed auth")
 
     def __init__(self, isock):
         self.isock = isock
         reactor.callLater(1.0, self.readFromIn)
 
-    def lineReceived(self, line):
-        """
-        As soon as any data is received, write it back.
-        """
-        line = line.decode('utf-8','ignore')
-        if line is "<3<3":
-            self.alive = True
-
     def readFromIn(self):
         for ins in select.select([self.isock, sys.stdin] + self.inputs, [], [], 1)[0]:
             try:
                 line = self.readline(ins)
-            except Excpetion as e:
+            except Exception as e:
                 print(e)
-            if line:
+                continue
+            if line != None: 
                 parts = line.split('|')
                 parts[0]=parts[0].strip()
                 if len(parts) > 1:
@@ -45,7 +63,8 @@ class Echo(LineReceiver):
                         parts.append(str(time.time()+5))
                 else:
                     parts.append(str(time.time()+5))
-                line = '|'.join(parts)
+                line = ' '.join(parts[:-1])
+                line = line + '|' + parts[-1]
                 print(line)
                 for h in self.factory.clients:
                     print("Sent message to",h)
@@ -65,7 +84,8 @@ class Echo(LineReceiver):
                 ins.close()
                 self.inputs.remove(ins)
                 if data:
-                    return data.decode('utf-8','ignore')
+                    data = data.decode('utf-8','ignore')
+                    return self.authenticate(data)
                 else:
                     return None
         elif ins == sys.stdin: # Maybe its standard input?
@@ -102,11 +122,11 @@ class EchoFactory(protocol.Factory):
 def main():
     host = ""
     port = 42420
-    s = os.open('input', os.O_RDONLY|os.O_NONBLOCK)
-    #s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    #s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    #s.bind((host,port))
-    #s.listen(4)
+    #s = os.open('input', os.O_RDONLY|os.O_NONBLOCK)
+    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((host,port))
+    s.listen(4)
     f=EchoFactory(s)
     reactor.listenTCP(42124,f)
     reactor.run()
