@@ -52,7 +52,7 @@ class IntercomClientFactory(protocol.ClientFactory):
         return p
 
 try:
-    with open('server.txt') as f:
+    with open('server.key.txt') as f:
         server = f.read().strip()
 except FileNotFoundError:
         server = 'localhost'
