@@ -30,10 +30,10 @@ def main():
     try:
         host = open("server.txt").read()
     except Exception as e:
-        print(e)
+        print("WARN: ",e)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host,port))
-    print("Connected")
+    print("Connected to",host)
     sender = Sender()
     message = input("Enter message ")
     auth_message = sender.make_message(message)
