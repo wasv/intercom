@@ -26,7 +26,7 @@ def main():
     port = 42420
 
     try:
-        host = open("server.key.txt").read()
+        host = open("server.key.txt").read().strip()
     except Exception as e:
         print("WARN: ",e)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
