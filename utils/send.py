@@ -9,15 +9,12 @@ except NameError:
     pass
 
 class Sender:
-    publicid = 'test'
-    privateid = 'qwerty123'.encode('utf-8','ignore')
-
     def make_message(self, message):
         bmessage = message.encode('utf-8','ignore')
         checksum = hashlib.md5(bmessage+self.privateid).hexdigest()
         return self.publicid+'%'+message+'%'+checksum
 
-    def __init__(self,publicid=None,privateid=None):
+    def __init__(self,publicid, privateid):
         if publicid:
             self.publicid = publicid
         if privateid:
@@ -27,15 +24,23 @@ def main():
     import socket
     host = "localhost"
     port = 42420
+
     try:
-        host = open("server.txt").read()
+        host = open("server.key.txt").read()
     except Exception as e:
         print("WARN: ",e)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host,port))
     print("Connected to",host)
-    sender = Sender()
-    message = input("Enter message ")
+
+    authpair = ['test','qwerty123']
+    try:
+        authpair = open("myauth.key.txt").read().strip().split(' ')
+    except Exception as e:
+        print("WARN: ",e)
+
+    sender = Sender( authpair[0], authpair[1] )
+    message = input("Enter message: ")
     auth_message = sender.make_message(message)
     s.send(auth_message.encode('utf-8','ignore'))
     print(auth_message)
