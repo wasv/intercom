@@ -31,11 +31,11 @@ class Echo(LineReceiver):
         if len(data) != 3:
             raise Exception("Invalid Message")
         try:
-            salt = self.authkeys[data[0]].encode('utf-8','ignore')
+            privateid = self.authkeys[data[0]].encode('utf-8','ignore')
         except:
             raise Exception("Invalid Authkey")
         message = data[1].encode('utf-8','ignore')
-        checksum = hashlib.md5(message+salt).hexdigest()
+        checksum = hashlib.md5(message+privateid).hexdigest()
         if data[2] == checksum:
             return message.decode('utf-8','ignore')
         else:
