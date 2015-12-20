@@ -21,7 +21,7 @@ class Sender:
             self.privateid = privateid.encode('utf-8','ignore')
 
 def main():
-    import socket
+    import socket, time
     host = "localhost"
     port = 42420
 
@@ -29,8 +29,6 @@ def main():
         host = open("server.key.txt").read().strip()
     except Exception as e:
         print("WARN: ",e)
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host,port))
     print("Connected to",host)
 
     authpair = ['test','qwerty123']
@@ -40,10 +38,15 @@ def main():
         print("WARN: ",e)
 
     sender = Sender( authpair[0], authpair[1] )
-    message = input("Enter message: ")
-    auth_message = sender.make_message(message)
-    s.send(auth_message.encode('utf-8','ignore'))
-    print(auth_message)
+    while True:
+      s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      s.connect((host,port))
+      message = input("Enter message: ")
+      auth_message = sender.make_message(message)
+      s.send(auth_message.encode('utf-8','ignore'))
+      s.close()
+      time.sleep(3)
+      print(auth_message)
 
 if __name__ == '__main__':
     main()

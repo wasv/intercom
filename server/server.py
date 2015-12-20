@@ -59,9 +59,9 @@ class Echo(LineReceiver):
                         parts[-1] = str(time.time()+float(parts[-1]))
                     # If any of the above fails, then last part is not a float. Use default value.
                     except ValueError:
-                        parts.append(str(time.time()+5))
+                        parts.append(str(time.time()+1))
                 else:
-                    parts.append(str(time.time()+5))
+                    parts.append(str(time.time()+1))
                 line = ' '.join(parts[:-1])
                 line = line + '|' + parts[-1]
                 print(line)
@@ -107,6 +107,7 @@ class EchoFactory(protocol.Factory):
             self.istreams = istreams
         else:
             self.istreams = [ istreams ]
+        print("Server started")
 
     def buildProtocol(self, addr):
         addr = addr.host
