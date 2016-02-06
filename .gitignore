@@ -1,4 +1,9 @@
+# Sensitive files
 *.key.txt
+
+# Build files
+intercom-latest-linux-amd64.aci
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
