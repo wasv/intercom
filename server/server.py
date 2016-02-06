@@ -13,6 +13,11 @@ import hashlib
 from twisted.protocols.basic import LineReceiver
 from twisted.internet import reactor, protocol, endpoints, task
 
+def print_info(*objs):
+    print("INFO: ", *objs, file=sys.stderr)
+
+def print_warn(*objs):
+    print("WARN: ", *objs, file=sys.stderr)
 
 ### Protocol Implementation
 
@@ -57,7 +62,7 @@ class Relay(LineReceiver):
             try:
                 line = self.readline(ins)
             except Exception as e:
-                print(e)
+                print_warn(e)
                 continue
             if line != None and line != "":
                 parts = line.split('|')
@@ -74,9 +79,9 @@ class Relay(LineReceiver):
                 # Once message is parsed, reassemble it and send it to clients.
                 line = ' '.join(parts[:-1])
                 line = line + '|' + parts[-1]
-                print(line)
+                print_info(line)
                 for h in self.factory.clients:
-                    print("Sent message to", h)
+                    print_info("Sent message to", h)
                     c = self.factory.clients[h]
                     c.message(line.encode('utf-8'))
         # Repeat every second.
@@ -129,7 +134,7 @@ class RelayFactory(protocol.Factory):
             self.istreams = istreams
         else:
             self.istreams = [istreams]
-        print("Server started")
+        print_info("Server started")
 
     def buildProtocol(self, addr):
         """
@@ -140,11 +145,11 @@ class RelayFactory(protocol.Factory):
         addr = addr.host
         # Determine if we've seen this client before.
         if addr not in self.clients:
-            print("New client", addr)
+            print_info("New client", addr)
             self.clients[addr] = self.protocol(self.istreams)
             self.clients[addr].factory = self
         else:
-            print("Reconnection from", addr)
+            print_info("Reconnection from", addr)
         p = self.clients[addr]
         return p
 
@@ -165,7 +170,7 @@ def main():
             authpair = line.strip().split(' ')
             authkeys[authpair[0]] = authpair[1]
     except Exception as e:
-        print("WARN:", e)
+        print_warn(e)
 
     # Telnet Interface Setup
     host = ""
@@ -178,6 +183,7 @@ def main():
     ins.append(s)
 
     # FIFO Interface Setup
+    os.mkfifo('input', mode=0o644)
     s = os.open('input', os.O_RDONLY | os.O_NONBLOCK)
     ins.append(s)
 

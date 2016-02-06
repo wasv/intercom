@@ -1,4 +1,3 @@
-from asyncio import Lock
 import pickle
 import time
 import plugins.command
@@ -10,7 +9,6 @@ class Heap(object):
 
     def __init__(self):
         self.arr = []
-        self.lock = Lock()
 
     def push(self, key, value):
         self.arr.append((key, value))

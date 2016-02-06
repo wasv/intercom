@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 from schedule import Heap
 import plugins
@@ -54,7 +55,7 @@ class IntercomClientFactory(protocol.ClientFactory):
 try:
     with open('server.key.txt') as f:
         server = f.read().strip()
-except FileNotFoundError:
+except Exception:
         server = 'localhost'
 
 connector = reactor.connectTCP(server, 42124, IntercomClientFactory())
