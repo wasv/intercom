@@ -26,25 +26,18 @@ sudo ./build-server-intercom.sh
 sudo rkt run --insecure-options=image wasv.me/intercom
 ```
 
-## Send a message
+## Client setup 
 ```
 echo [your server ip] >> server.key.txt
 python client/client.py
+```
+
+## Send a message
+```
+python utils/send.py
 ```
 
 ## Future plans
 * Absolute times instead of delays.
 * Web Interface
 
-## Client setup Installation
-```
-sudo apt-get install python-pip espeak python-dev
-pip install -r requirements.txt
-python client/client.py
-
-
-or
-
-
-./setup.sh
-```
