@@ -1,20 +1,20 @@
 from __future__ import print_function
 import time
-from schedule import Heap
 import plugins
-from twisted.internet import reactor,protocol,endpoints,task
+from twisted.internet import reactor,protocol,task
 from twisted.protocols.basic import LineReceiver
 
 __author__ = 'wstevens'
+
 
 class IntercomProtocol(LineReceiver):
 
     def check(self):
         if not self.factory.heap.empty():
-            run_time, cmd = self.factory.heap.peek()
-            if run_time <= time.time():
-                self.factory.heap.pop()
-                cmd.act()
+            for run_time, cmd in self.factory.heap:
+                if run_time <= time.time():
+                    del(self.factory.heap[run_time])
+                    cmd.act()
 
     def connectionMade(self):
         print("Connected successfully")
@@ -29,12 +29,12 @@ class IntercomProtocol(LineReceiver):
                 parts[1]=parts[-1]
                 print(parts[1],"New Message Recieved: ",parts[0])
                 sc = plugins.command.SayCommand(parts[0])
-                self.factory.heap.push(float(parts[1]), sc)
+                self.factory.heap[float(parts[1])] = sc
     
 
 class IntercomClientFactory(protocol.ClientFactory):
     protocol = IntercomProtocol
-    heap = Heap()
+    heap = dict()
 
     def clientConnectionFailed(self, connector, reason):
         print('connection failed:', reason.getErrorMessage())
